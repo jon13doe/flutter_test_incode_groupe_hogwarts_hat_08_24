@@ -9,7 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
+  material_symbols_icons: ^4.2758.0
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -17,3 +18,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: HarryP
+      fonts:
+        - asset: fonts/harryP.ttf
+  assets:
+    - assets/

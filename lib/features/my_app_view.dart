@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_test_incode_groupe_hogwarts_hat_08_24/features/screens/home_screen.dart';
+import 'package:flutter/widgets.dart';
 
+import 'screens/home_screen.dart';
 import 'screens/list_screen.dart';
 
 class MyAppView extends StatefulWidget {
@@ -23,6 +25,7 @@ class _MyAppViewState extends State<MyAppView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: Text([
           'Home Screen',
           'List Screen',
@@ -30,40 +33,87 @@ class _MyAppViewState extends State<MyAppView> {
         actions: [
           TextButton(
             onPressed: () {},
-            child: const Text('Reset'),
-          )
+            child: const Text(
+              'Reset',
+              style: TextStyle(
+                fontFamily: 'HarryP',
+                fontSize: 20.0,
+                color: Colors.black,
+              ),
+            ),
+          ),
         ],
       ),
       body: Column(
         children: [
-          Row(
-            children: List.generate(3, (index) {
-              return const SizedBox(
-                child: Column(
-                  children: [
-                    Text('dfgdf'),
-                    Text('dfgdf'),
-                  ],
-                ),
-              );
-            }),
+          SizedBox(
+            width: 0.9 * MediaQuery.of(context).size.width,
+            child: const Divider(
+              height: 1,
+              color: Colors.black,
+            ),
           ),
-          _selectedIndex == 0 ? const HomeScreen() : const ListScreen(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(3, (index) {
+                return Container(
+                  height: 0.1 * MediaQuery.of(context).size.height,
+                  width: 0.2 * MediaQuery.of(context).size.width,
+                  decoration: BoxDecoration(
+                    border: Border.all(),
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      const Text(
+                        '888',
+                        style: TextStyle(fontSize: 35),
+                      ),
+                      Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Text(['Total', 'Succes', 'Failed'][index])),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ),
+          Expanded(
+            child:
+                _selectedIndex == 0 ? const HomeScreen() : const ListScreen(),
+          ),
+          SizedBox(
+            width: 0.9 * MediaQuery.of(context).size.width,
+            child: const Divider(
+              height: 1,
+              color: Colors.black,
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        selectedFontSize: 20,
+        selectedItemColor: Colors.black,
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Image.asset(
+              'assets/home.png',
+              height: 0.5 * kToolbarHeight,
+            ),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.list),
+            icon: Image.asset(
+              'assets/foliant.png',
+              height: 0.5 * kToolbarHeight,
+            ),
             label: 'List',
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.amber[800],
         onTap: _onItemTapped,
       ),
     );
