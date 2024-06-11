@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'features/my_app_view.dart';
+import 'features/harry.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const MyAppView(),
+      home: const Harry(),
     );
   }
 }

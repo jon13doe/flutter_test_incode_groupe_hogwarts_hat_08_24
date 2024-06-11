@@ -1,8 +1,16 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:convert';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final VoidCallback onChoose;
+
+  const HomeScreen({
+    super.key,
+    required this.onChoose,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -16,80 +24,163 @@ class _HomeScreenState extends State<HomeScreen> {
     'Hufflepuff'
   ];
 
+  List<List<String>> listOfChars = [];
+  Random random = Random();
+  int randPerson = 0;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchListOfChars();
+  }
+
+  Future<void> fetchListOfChars() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? jsonString = prefs.getString('listOfChars');
+    if (jsonString != null) {
+      List<dynamic> decoded = jsonDecode(jsonString);
+      List<List<String>> characters = [];
+      for (var character in decoded) {
+        List<String> characterInfo = List<String>.from(character);
+        characters.add(characterInfo);
+      }
+      setState(() {
+        listOfChars = characters;
+        randPerson = random.nextInt(listOfChars.length);
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> incrementSuccess() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int success = (prefs.getInt('success') ?? 0) + 1;
+    await prefs.setInt('success', success);
+    widget.onChoose();
+  }
+
+  Future<void> incrementFailed() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int failed = (prefs.getInt('failed') ?? 0) + 1;
+    await prefs.setInt('failed', failed);
+    widget.onChoose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(
           horizontal: 0.25 * MediaQuery.of(context).size.width, vertical: 10),
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Container(
-            height: 0.2 * MediaQuery.of(context).size.height,
-            width: 0.3 * MediaQuery.of(context).size.width,
-            decoration: BoxDecoration(
-              border: Border.all(),
-              borderRadius: BorderRadius.circular(5),
-            ),
-            child: Center(
-              child: Text('Image.network(' ')'),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: const Text(
-              'Harry',
-              style: TextStyle(fontSize: 20),
-            ),
-          ),
-          Expanded(
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-              ),
-              itemCount: 4, // Added itemCount to limit the number of items
-              itemBuilder: (BuildContext context, int index) {
-                return Container(
-                  height: 25,
-                  decoration: BoxDecoration(
-                    border: Border.all(),
-                    borderRadius: BorderRadius.circular(5),
+      child: isLoading
+          ? const Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(color: Colors.black),
+                Text('Loading...'),
+              ],
+            )
+          : Column(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SizedBox(
+                  height: 0.2 * MediaQuery.of(context).size.height,
+                  width: 0.3 * MediaQuery.of(context).size.width,
+                  child: Center(
+                    child: listOfChars.isNotEmpty &&
+                            randPerson < listOfChars.length &&
+                            listOfChars[randPerson].isNotEmpty
+                        ? Image.network(
+                            listOfChars[randPerson][1],
+                          )
+                        : const Placeholder(),
                   ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 15),
-                        child: Image.asset('assets/${houses[index]}.png'),
-                      ),
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: Text(houses[index]),
-                      ),
-                    ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    listOfChars.isNotEmpty && randPerson < listOfChars.length
+                        ? listOfChars[randPerson][0]
+                        : 'No data available',
+                    style: const TextStyle(fontSize: 20),
                   ),
-                );
-              },
+                ),
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                    ),
+                    itemCount: 4,
+                    itemBuilder: (BuildContext context, int index) {
+                      return InkWell(
+                        onTap: () {
+                          if (houses[index] == listOfChars[randPerson][2]) {
+                            incrementSuccess();
+                          } else {
+                            incrementFailed();
+                          }
+                          setState(() {
+                            randPerson = random.nextInt(listOfChars.length);
+                          });
+                        },
+                        splashColor: Colors.amberAccent,
+                        child: Container(
+                          height: 25,
+                          decoration: BoxDecoration(
+                            border: Border.all(),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 15),
+                                child:
+                                    Image.asset('assets/${houses[index]}.png'),
+                              ),
+                              Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Text(houses[index]),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                InkWell(
+                  onTap: () {
+                    if (!houses.contains(listOfChars[randPerson][2])) {
+                      incrementSuccess();
+                    } else {
+                      incrementFailed();
+                    }
+                    setState(() {
+                      randPerson = random.nextInt(listOfChars.length);
+                    });
+                  },
+                  splashColor: Colors.amberAccent,
+                  child: Container(
+                    height: 0.1 * MediaQuery.of(context).size.height,
+                    decoration: BoxDecoration(
+                      border: Border.all(),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Not in House',
+                        style: TextStyle(fontSize: 30),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-          Container(
-            height: 0.1 * MediaQuery.of(context).size.height,
-            decoration: BoxDecoration(
-              border: Border.all(),
-              borderRadius: BorderRadius.circular(5),
-            ),
-            child: Center(
-              child: Text(
-                'Not in House',
-                style: TextStyle(fontSize: 30),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

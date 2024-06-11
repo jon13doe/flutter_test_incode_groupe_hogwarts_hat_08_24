@@ -1,23 +1,63 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/list_screen.dart';
 
-class MyAppView extends StatefulWidget {
-  const MyAppView({super.key});
+class Harry extends StatefulWidget {
+  const Harry({super.key});
 
   @override
-  State<MyAppView> createState() => _MyAppViewState();
+  State<Harry> createState() => _HarryState();
 }
 
-class _MyAppViewState extends State<MyAppView> {
+class _HarryState extends State<Harry> {
   int _selectedIndex = 0;
 
-  void _onItemTapped(int index) {
+  int total = 0;
+  int success = 0;
+  int failed = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    success = await getSuccess();
+    failed = await getFailed();
     setState(() {
-      _selectedIndex = index;
+      total = success + failed;
+    });
+  }
+
+  Future<int> getSuccess() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('success') ?? 0;
+  }
+
+  Future<int> getFailed() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('failed') ?? 0;
+  }
+
+  Future<void> resetValues() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('success', 0);
+    await prefs.setInt('failed', 0);
+    setState(() {
+      total = 0;
+      success = 0;
+      failed = 0;
+    });
+  }
+
+  void updateOn() async {
+    success = await getSuccess();
+    failed = await getFailed();
+    setState(() {
+      total = success + failed;
     });
   }
 
@@ -32,7 +72,14 @@ class _MyAppViewState extends State<MyAppView> {
         ][_selectedIndex]),
         actions: [
           TextButton(
-            onPressed: () {},
+            onPressed: () async {
+              await resetValues();
+              setState(() {
+                total = 0;
+                success = 0;
+                failed = 0;
+              });
+            },
             child: const Text(
               'Reset',
               style: TextStyle(
@@ -68,9 +115,9 @@ class _MyAppViewState extends State<MyAppView> {
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      const Text(
-                        '888',
-                        style: TextStyle(fontSize: 35),
+                      Text(
+                        '${[total, success, failed][index]}',
+                        style: const TextStyle(fontSize: 35),
                       ),
                       Align(
                           alignment: Alignment.bottomCenter,
@@ -82,8 +129,9 @@ class _MyAppViewState extends State<MyAppView> {
             ),
           ),
           Expanded(
-            child:
-                _selectedIndex == 0 ? const HomeScreen() : const ListScreen(),
+            child: _selectedIndex == 0
+                ? HomeScreen(onChoose: updateOn)
+                : const ListScreen(),
           ),
           SizedBox(
             width: 0.9 * MediaQuery.of(context).size.width,
@@ -114,7 +162,11 @@ class _MyAppViewState extends State<MyAppView> {
           ),
         ],
         currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+        onTap: (int index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
       ),
     );
   }
