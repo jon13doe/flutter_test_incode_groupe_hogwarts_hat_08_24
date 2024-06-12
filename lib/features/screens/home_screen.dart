@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 import 'dart:math';
 
@@ -5,11 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
-  final VoidCallback onChoose;
+  final VoidCallback? onChoose;
+  final Function(Map<String, List<dynamic>>)? onUpdateList;
 
   const HomeScreen({
     super.key,
-    required this.onChoose,
+    this.onChoose,
+    this.onUpdateList,
   });
 
   @override
@@ -25,6 +28,8 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   List<List<String>> listOfChars = [];
+  Map<String, List<dynamic>> listOfAttemtChar = {};
+
   Random random = Random();
   int randPerson = 0;
   bool isLoading = true;
@@ -57,14 +62,14 @@ class _HomeScreenState extends State<HomeScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int success = (prefs.getInt('success') ?? 0) + 1;
     await prefs.setInt('success', success);
-    widget.onChoose();
+    widget.onChoose!();
   }
 
   Future<void> incrementFailed() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int failed = (prefs.getInt('failed') ?? 0) + 1;
     await prefs.setInt('failed', failed);
-    widget.onChoose();
+    widget.onChoose!();
   }
 
   @override
@@ -87,23 +92,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(
                   height: 0.2 * MediaQuery.of(context).size.height,
                   width: 0.3 * MediaQuery.of(context).size.width,
-                  child: Center(
-                    child: listOfChars.isNotEmpty &&
-                            randPerson < listOfChars.length &&
-                            listOfChars[randPerson].isNotEmpty
-                        ? Image.network(
-                            listOfChars[randPerson][1],
-                          )
-                        : const Placeholder(),
+                  child: CharIcon(
+                    imgUrl: listOfChars[randPerson][1],
+                    fontSize: 40,
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: Text(
-                    listOfChars.isNotEmpty && randPerson < listOfChars.length
-                        ? listOfChars[randPerson][0]
-                        : 'No data available',
-                    style: const TextStyle(fontSize: 20),
+                    listOfChars[randPerson][0],
+                    style: const TextStyle(fontSize: 25),
                   ),
                 ),
                 Expanded(
@@ -117,23 +115,44 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemCount: 4,
                     itemBuilder: (BuildContext context, int index) {
                       return InkWell(
+                        borderRadius: BorderRadius.circular(10),
                         onTap: () {
-                          if (houses[index] == listOfChars[randPerson][2]) {
+                          bool guessed =
+                              houses[index] == listOfChars[randPerson][2];
+                          if (guessed) {
                             incrementSuccess();
                           } else {
                             incrementFailed();
                           }
+                          if (!listOfAttemtChar
+                              .containsKey(listOfChars[randPerson][0])) {
+                            listOfAttemtChar[listOfChars[randPerson][0]] = [
+                              listOfChars[randPerson][1],
+                              listOfChars[randPerson][2],
+                              listOfChars[randPerson][3],
+                              listOfChars[randPerson][4],
+                              listOfChars[randPerson][5],
+                              guessed,
+                              1,
+                            ];
+                          } else {
+                            listOfAttemtChar[listOfChars[randPerson][0]]?[5] =
+                                listOfAttemtChar[listOfChars[randPerson][0]]
+                                            ?[5] ==
+                                        false
+                                    ? guessed
+                                    : true;
+                            listOfAttemtChar[listOfChars[randPerson][0]]?[6] +=
+                                1;
+                          }
+                          widget.onUpdateList!(listOfAttemtChar);
                           setState(() {
                             randPerson = random.nextInt(listOfChars.length);
                           });
                         },
                         splashColor: Colors.amberAccent,
-                        child: Container(
+                        child: SizedBox(
                           height: 25,
-                          decoration: BoxDecoration(
-                            border: Border.all(),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
@@ -176,6 +195,49 @@ class _HomeScreenState extends State<HomeScreen> {
                         'Not in House',
                         style: TextStyle(fontSize: 30),
                       ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+class CharIcon extends StatelessWidget {
+  final String imgUrl;
+  final double fontSize;
+
+  const CharIcon({
+    super.key,
+    required this.imgUrl,
+    required this.fontSize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: imgUrl != ''
+          ? Image.network(
+              imgUrl,
+            )
+          : Stack(
+              alignment: Alignment.center,
+              children: [
+                Image.asset('assets/hat.png'),
+                Transform.rotate(
+                  angle: -pi / 6,
+                  child: Text(
+                    'No data',
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      color: Colors.grey,
+                      shadows: List.generate(4, (index) {
+                        return Shadow(
+                            offset: Offset(index % 2 > 0 ? 1.5 : -1.5,
+                                index % 2 > 0 ? -1.5 : 1.5),
+                            color: Colors.black);
+                      }),
                     ),
                   ),
                 ),

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'home_screen.dart';
+
 class CharScreen extends StatefulWidget {
-  final bool guessed;
-  const CharScreen({super.key, required this.guessed});
+  final List<dynamic> char;
+  const CharScreen({super.key, required this.char});
 
   @override
   State<CharScreen> createState() => _CharScreenState();
@@ -31,20 +33,26 @@ class _CharScreenState extends State<CharScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.network('https://via.placeholder.com/150x200'),
-                widget.guessed
+                SizedBox(
+                  width: 0.35 * MediaQuery.of(context).size.width,
+                  child: CharIcon(
+                    imgUrl: widget.char[0],
+                    fontSize: 40,
+                  ),
+                ),
+                widget.char[5]
                     ? SizedBox(
                         width: 0.4 * MediaQuery.of(context).size.width,
-                        child: const Align(
+                        child: Align(
                           alignment: Alignment.topLeft,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('House: '),
-                              Text('Date of birth: '),
-                              Text('Actor: '),
-                              Text('Species: '),
+                              Text('House: ${widget.char[1]}'),
+                              Text('Date of birth: ${widget.char[2]}'),
+                              Text('Actor: ${widget.char[3]}'),
+                              Text('Species: ${widget.char[4]}'),
                             ],
                           ),
                         ),

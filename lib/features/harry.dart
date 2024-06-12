@@ -17,6 +17,7 @@ class _HarryState extends State<Harry> {
   int total = 0;
   int success = 0;
   int failed = 0;
+  Map<String, List<dynamic>> listOfAttemtChar = {};
 
   @override
   void initState() {
@@ -50,6 +51,7 @@ class _HarryState extends State<Harry> {
       total = 0;
       success = 0;
       failed = 0;
+      listOfAttemtChar.clear();
     });
   }
 
@@ -58,6 +60,12 @@ class _HarryState extends State<Harry> {
     failed = await getFailed();
     setState(() {
       total = success + failed;
+    });
+  }
+
+  void updateListOfAttemtChar(Map<String, List<dynamic>> newListOfAttemtChar) {
+    setState(() {
+      listOfAttemtChar = newListOfAttemtChar;
     });
   }
 
@@ -130,8 +138,9 @@ class _HarryState extends State<Harry> {
           ),
           Expanded(
             child: _selectedIndex == 0
-                ? HomeScreen(onChoose: updateOn)
-                : const ListScreen(),
+                ? HomeScreen(
+                    onChoose: updateOn, onUpdateList: updateListOfAttemtChar)
+                : ListScreen(listOfAttemtChar: listOfAttemtChar),
           ),
           SizedBox(
             width: 0.9 * MediaQuery.of(context).size.width,
@@ -142,31 +151,42 @@ class _HarryState extends State<Harry> {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        selectedFontSize: 20,
-        selectedItemColor: Colors.black,
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Image.asset(
-              'assets/home.png',
-              height: 0.5 * kToolbarHeight,
+      bottomNavigationBar: Theme(
+        data: ThemeData(
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          textTheme: const TextTheme(
+            bodyMedium: TextStyle(
+              fontFamily: 'HarryP',
             ),
-            label: 'Home',
           ),
-          BottomNavigationBarItem(
-            icon: Image.asset(
-              'assets/foliant.png',
-              height: 0.5 * kToolbarHeight,
+        ),
+        child: BottomNavigationBar(
+          selectedFontSize: 20,
+          selectedItemColor: Colors.black,
+          items: <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Image.asset(
+                'assets/home.png',
+                height: 0.5 * kToolbarHeight,
+              ),
+              label: 'Home',
             ),
-            label: 'List',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: (int index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+            BottomNavigationBarItem(
+              icon: Image.asset(
+                'assets/foliant.png',
+                height: 0.5 * kToolbarHeight,
+              ),
+              label: 'List',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          onTap: (int index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+        ),
       ),
     );
   }

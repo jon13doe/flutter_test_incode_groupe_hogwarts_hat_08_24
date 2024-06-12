@@ -22,11 +22,13 @@ void main() async {
 
 Future<void> initializePreferences() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  try {
-    List<List<String>> listOfChars = await fetchListOfCharsFromApi();
-    await prefs.setString('listOfChars', jsonEncode(listOfChars));
-  } catch (e) {
-    log('$e');
+  if (!prefs.containsKey('listOfChars')) {
+    try {
+      List<List<String>> listOfChars = await fetchListOfCharsFromApi();
+      await prefs.setString('listOfChars', jsonEncode(listOfChars));
+    } catch (e) {
+      log('$e');
+    }
   }
 }
 
